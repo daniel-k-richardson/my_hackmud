@@ -1,116 +1,120 @@
 function (context, args) {
   // First attempt at a t1 cracker
-  // EZ_ 21, 35, 40 (will include c00 1-3 later)
+  // This cracks all T1 locks
   // by HappyCat >'.'<
 
-  // the names of all T1 locks
-  const LOCK_LIST = ['`NEZ_21`', '`NEZ_35`', '`NEZ_40`', '`Nc001`', '`Nc002`', '`Nc003`']
+  const LOCKS = {
+    // All the t1 locks
+    LOCK_TYPES: [
+      '`NEZ_21`', '`NEZ_35`', '`NEZ_40`', '`Nc001`', '`Nc002`', '`Nc003`'
+    ],
+    // all the lock paramters
+    PARAMETERS: [
+      '`Ndigit`', '`Nez_prime`', '`Ncolor_digit`', '`Nc002_complement`',
+      '`Nc003_triad_1`', '`Nc003_triad_2`'
+    ],
+    // first lock on all EZs
+    EZ_PASS: [
+      'unlock', 'open', 'release'
+    ],
+    // primes for ez_prime
+    PRIMES: [
+      2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
+      67, 71, 73, 79, 83, 89, 97
+    ],
+    // colours for c00s these are used for c002_complement key and the c003's triad 1.2
+    // todo: brute forcing complement and triads cause more calls to the scriptor which
+    // can slow the script down. Haven't noticed any issues, should make a function for
+    // triads to make the script a little more efficient.
+    COLOURS: [
+      'red', 'blue', 'green', 'orange', 'yellow', 'cyan', 'purple', 'lime'
+    ],
+    // I found this to be the most reliable way of checking for a successful crack.
+    CRACKED: 'Connection terminated.'
+  }
 
-  // Each t1 lock has a list of paramters that might also need cracking.
-  const PARAMETERS = ['`Ndigit`', '`Nez_prime`', '`Ncolor_digit`', '`Nc002_complement`', '`Nc003_triad_1`', '`Nc003_triad_2`']
+  // This takes a string (the response from scriptor) and attempts to match it
+  // with a list of locks that have also been passed to the function.
+  // If a match is found, the function will extract the lock name, remove colour
+  // tags and return just the name of the lock that needs to be cracked.
+  //
+  // Probably the most important thing to note, filters a string for an excated
+  // lock name.
+  function getLockType (findLockinString, locksList) {
+    let searchStringForLock = findLockinString.replace(/\n/g, ' ').split(' ')
+    let resultOfSearch = locksList.filter(x => (searchStringForLock.indexOf(x) > -1))
 
-  // unlock keys for all locks and parameters
-  const EZ_DICT = ['unlock', 'open', 'release']
-  const PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
-  const COLOURS = ['red', 'blue', 'green', 'orange', 'yellow', 'cyan', 'purple', 'lime']
-
-  // Most reliable way to check lock has been cracked when multiple locks
-  const CRACKED = 'Connection terminated.'
-
-  // This gets the name of the lock we are attempting to crack. The way it works is simple.
-  // you call the function passing in the response from calling the lock and a list of locks you
-  // want to compare against. The response string is formatted and split into an array.
-  // This is so that we can find the intersection of what is in the response and the list of
-  // locks. Each response will only have one lock to find so |response intersect lock_list| = 1.
-  // We then convert the returned item into a string and remove the special chars `N ` from it.
-  // response: is passed in and is the response of target.call().
-
-  // lock: is a list of locks.
-
-  //  Returns: string containing the lock name.
-  function getLockType (response, lock) {
-    let search = response.replace(/\n/g, ' ').split(' ')
-    let intersection = lock.filter(x => (search.indexOf(x) > -1))
-
-    if (intersection) {
-      return intersection.toString().slice(2, -1)
+    if (resultOfSearch) {
+      return resultOfSearch.toString().slice(2, -1)
     } else {
       throw new Error('DEBUG 1: Cannot find lock type.')
     }
   }
 
- // This cracks the lock for us. we pass it the lock type to crack (i.e EZ_21 etc.),
- // a dictionary of keys to open the lock and the lockObj so that as we solve the lock the
- // lock type and the answer to that lock can be stored on the lockObj itself (probably the
- // most important aspect of cracking locks containing multiple locks.
+  // This is a brute force cracker, the target lock is the lock object we want to
+  // crack, the passwordList are the passwords we want to run against the lock.
+  // The typeOfLockToCrack is the name of this lock (i.e. EZ_something), this is
+  // required so that we can add the lock and it's password to the lock for each
+  // lock piece until it's open.
+  function crack (typeOfLockToCrack, passwordList, targetLock) {
+    for (var password in passwordList) {
+      targetLock[typeOfLockToCrack] = passwordList[password]
 
- // locktype: the name of the lock we it to crack (could be any lock).
- // dict: the keys to run against the lock in order to crack it.
- // lockObj: the actual lock being cracked, containing all the key pairs {locktype : key } so
- // that it can be called with target.call(locktype);
-
- // returns: the result after crack otherwise an error.
-  function crack (locktype, dict, lockObj) {
-    for (var key in dict) {
-      lockObj[locktype] = dict[key]
-
-      let response = args.target.call(lockObj)
-      if (response.match(/(parameter|Connection terminated.|Denied access)/)) {
-        return response
+      let resultOfCrackAttempt = args.target.call(targetLock)
+      if (resultOfCrackAttempt.match(/(parameter|Connection terminated.|Denied access)/)) {
+        return resultOfCrackAttempt
       }
     }
-    throw new Error(`DEBUG 2: can't crack that one mang. ${locktype}`)
+    throw new Error(`DEBUG 2: can't crack that one mang. ${typeOfLockToCrack}`)
   }
 
-  // Controls the logic, checks that there are no more locks/parameters to the lock, in either
-  // case continues to direct the lock object to the correct method to continue solving the
-  // lock until 'Connection terminated.' has been found.
+  // Controls the logic, checks the status of the lock and calls the crack method
+  // with the approprate arugements so that it can be solved one piece at a time
+  // until 'Connection terminated.' has been found.
   function logicController () {
     // initialization
     let lockToCrack = {}
     let isCracking = true
 
-    let locktype = getLockType(args.target.call({}), LOCK_LIST)
-    let dictAttack = (locktype.indexOf('c00') > -1) ? COLOURS : EZ_DICT
-    let response = crack(locktype, dictAttack, lockToCrack)
+    // Find and attempt the first lock after the initial scriptor call.
+    let typeOfLockToCrack = getLockType(args.target.call({}), LOCKS.LOCK_TYPES)
+    let passwordList = (typeOfLockToCrack.indexOf('c00') > -1) ? LOCKS.COLOURS : LOCKS.EZ_PASS
+    let response = crack(typeOfLockToCrack, passwordList, lockToCrack)
 
     // we want the loop to run at least once and until isCracking is no longer true.
     do {
        // terminating case
-      if (response.indexOf(CRACKED) > -1) {
+      if (response.indexOf(LOCKS.CRACKED) > -1) {
         isCracking = false
       }
 
-      // if parameter it could only be digit or ez_prime
+      // if parameter has been found in response, we need to find out which one
+      // and recall the crack function with the correct passwordList
       if (response.indexOf('parameter') > -1) {
-        locktype = getLockType(response, PARAMETERS)
+        typeOfLockToCrack = getLockType(response, LOCKS.PARAMETERS)
 
-        if (locktype.match(/(digit)/)) {
-          dictAttack = [...Array(10).keys()]
-        } else if (locktype.match(/(digit_color)/)) {
-          dictAttack = [3, 4, 5, 6]
-        } else if (locktype.match(/(ez_prime)/)) {
-          dictAttack = PRIMES
-        } else {
-          dictAttack = COLOURS
+        // This is a nicer way to doing a switch or lots of if condictions.
+        const cases = {
+          digit: passwordList = [...Array(10).keys()],
+          color_digit: passwordList = [3, 4, 5, 6],
+          ez_prime: passwordList = LOCKS.PRIMES,
+          default: passwordList = LOCKS.COLOURS
         }
-        response = crack(locktype, dictAttack, lockToCrack)
+
+        // set the passwordList based on above object/switch
+        passwordList = cases[typeOfLockToCrack] || cases['default']
+        response = crack(typeOfLockToCrack, passwordList, lockToCrack)
 
       // if it isn't parameter then it must be another lock type.
       } else {
-        locktype = getLockType(args.target.call(lockToCrack), LOCK_LIST)
-
-        if (locktype.indexOf('EZ_') > -1) {
-          dictAttack = EZ_DICT
-        } else {
-          dictAttack = COLOURS
-        }
-
-        response = crack(locktype, dictAttack, lockToCrack)
+        typeOfLockToCrack = getLockType(response, LOCKS.LOCK_TYPES)
+        passwordList = (typeOfLockToCrack.indexOf('EZ_') > -1) ? LOCKS.EZ_PASS : LOCKS.COLOURS
+        response = crack(typeOfLockToCrack, passwordList, lockToCrack)
       }
     } while (isCracking)
 
-    return Date.now() - _START
+    // and we're done!
+    return response
   }
   return logicController()
 }
