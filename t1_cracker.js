@@ -95,10 +95,10 @@ function (context, args) {
 
         // This is a nicer way to doing a switch or lots of if condictions.
         const cases = {
-          digit: passwordList = [...Array(10).keys()],
-          color_digit: passwordList = [3, 4, 5, 6],
-          ez_prime: passwordList = LOCKS.PRIMES,
-          default: passwordList = LOCKS.COLOURS
+          digit: [...Array(10).keys()],
+          color_digit: [3, 4, 5, 6],
+          ez_prime: LOCKS.PRIMES,
+          default: LOCKS.COLOURS
         }
 
         // set the passwordList based on above object/switch
