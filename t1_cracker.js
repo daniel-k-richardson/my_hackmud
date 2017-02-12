@@ -3,21 +3,18 @@ function (context, args) {
   // EZ_ 21, 35, 40 (will include c00 1-3 later)
   // by HappyCat >'.'<
 
-  // lock and parameter types, lock_list will soon include all c00 locks too
+  // the names of all T1 locks
   const LOCK_LIST = ['`NEZ_21`', '`NEZ_35`', '`NEZ_40`', '`Nc001`', '`Nc002`', '`Nc003`']
 
-  // each EZ lock greater than 21 as an extra lock to crack
+  // Each t1 lock has a list of paramters that might also need cracking.
   const PARAMETERS = ['`Ndigit`', '`Nez_prime`', '`Ncolor_digit`', '`Nc002_complement`', '`Nc003_triad_1`', '`Nc003_triad_2`']
 
-  // unlock keys for all EZ locks
+  // unlock keys for all locks and parameters
   const EZ_DICT = ['unlock', 'open', 'release']
-
-  // all primes between 0-9 for EZ_40 (this is fucking ugly).
   const PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
-
   const COLOURS = ['red', 'blue', 'green', 'orange', 'yellow', 'cyan', 'purple', 'lime']
 
-  // most reliable way to check lock has been cracked when it contains multiple locks
+  // Most reliable way to check lock has been cracked when multiple locks
   const CRACKED = 'Connection terminated.'
 
   // This gets the name of the lock we are attempting to crack. The way it works is simple.
@@ -56,6 +53,7 @@ function (context, args) {
   function crack (locktype, dict, lockObj) {
     for (var key in dict) {
       lockObj[locktype] = dict[key]
+
       let response = args.target.call(lockObj)
       if (response.match(/(parameter|Connection terminated.|Denied access)/)) {
         return response
@@ -69,7 +67,7 @@ function (context, args) {
   // lock until 'Connection terminated.' has been found.
   function logicController () {
     // initialization
-    let lockToCrack = {sanic: 'gottagofast'}
+    let lockToCrack = {}
     let isCracking = true
 
     let locktype = getLockType(args.target.call({}), LOCK_LIST)
@@ -112,7 +110,7 @@ function (context, args) {
       }
     } while (isCracking)
 
-    return Date.now()-_START
+    return Date.now() - _START
   }
   return logicController()
 }
