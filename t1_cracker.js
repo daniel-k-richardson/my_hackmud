@@ -56,7 +56,6 @@ function (context, args) {
   function crack (typeOfLockToCrack, passwordList, targetLock) {
     for (var password in passwordList) {
       targetLock[typeOfLockToCrack] = passwordList[password]
-
       let resultOfCrackAttempt = args.target.call(targetLock)
 
       if (resultOfCrackAttempt.match(/(parameter|Connection terminated.|Denied access)/)) {
