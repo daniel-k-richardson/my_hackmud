@@ -23,9 +23,6 @@ function (context, args) {
       67, 71, 73, 79, 83, 89, 97
     ],
     // colours for c00s these are used for c002_complement key and the c003's triad 1.2
-    // todo: brute forcing complement and triads cause more calls to the scriptor which
-    // can slow the script down. Haven't noticed any issues, should make a function for
-    // triads to make the script a little more efficient.
     COLOURS: [
       'red', 'orange', 'yellow', 'lime', 'green', 'cyan', 'blue', 'purple'
     ],
