@@ -30,12 +30,12 @@ function (context, args) {
     CRACKED: 'Connection terminated.'
   }
 
-  // This takes a string (the response from scriptor) and attempts to match it
+  // This takes a string (the response from scripter) and attempts to match it
   // with a list of locks that have also been passed to the function.
   // If a match is found, the function will extract the lock name, remove colour
   // tags and return just the name of the lock that needs to be cracked.
   //
-  // Probably the most important thing to note, filters a string for an excated
+  // Probably the most important thing to note, filters a string for an exact
   // lock name.
   function getLockType (findLockinString, locksList) {
     let searchStringForLock = findLockinString.replace(/\n/g, ' ').split(' ')
@@ -70,14 +70,14 @@ function (context, args) {
   }
 
   // Controls the logic, checks the status of the lock and calls the crack method
-  // with the approprate arugements so that it can be solved one piece at a time
+  // with the appropriate arguments so that it can be solved one piece at a time
   // until 'Connection terminated.' has been found.
   function logicController () {
     // initialization
     let lockToCrack = {}
     let isCracking = true
 
-    // Attempt the first lock after the initial scriptor call.
+    // Attempt the first lock after the initial scripter call.
     let typeOfLockToCrack = getLockType(args.target.call({}), LOCKS.LOCK_TYPES)
     let passwordList = (typeOfLockToCrack.indexOf('c00') > -1) ? LOCKS.COLOURS : LOCKS.EZ_PASS
     let response = crack(typeOfLockToCrack, passwordList, lockToCrack)
@@ -94,7 +94,7 @@ function (context, args) {
       if (response.indexOf('parameter') > -1) {
         typeOfLockToCrack = getLockType(response, LOCKS.PARAMETERS)
 
-        // This is a nicer way to doing a switch or lots of if condictions.
+        // This is a nicer way to doing a switch or lots of if conditions.
         let cases = {
           digit: [...Array(10).keys()],
           color_digit: [lockToCrack.c001 ? lockToCrack.c001.length : 0],
