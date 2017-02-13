@@ -27,7 +27,7 @@ function (context, args) {
     // can slow the script down. Haven't noticed any issues, should make a function for
     // triads to make the script a little more efficient.
     COLOURS: [
-      'red', 'blue', 'green', 'orange', 'yellow', 'cyan', 'purple', 'lime'
+      'red', 'orange', 'yellow', 'lime', 'green', 'cyan', 'blue', 'purple'
     ],
     // I found this to be the most reliable way of checking for a successful crack.
     CRACKED: 'Connection terminated.'
@@ -61,11 +61,15 @@ function (context, args) {
       targetLock[typeOfLockToCrack] = passwordList[password]
 
       let resultOfCrackAttempt = args.target.call(targetLock)
+
       if (resultOfCrackAttempt.match(/(parameter|Connection terminated.|Denied access)/)) {
         return resultOfCrackAttempt
       }
     }
-    throw new Error(`DEBUG 2: can't crack that one mang. ${typeOfLockToCrack}`)
+    // Useful info if the lock hasn't been cracked.
+    throw new Error(`DEBUG 2: can't crack that one mang. ` +
+      `LockType: ${typeOfLockToCrack} ` +
+      `password list: ${passwordList}.`)
   }
 
   // Controls the logic, checks the status of the lock and calls the crack method
@@ -76,7 +80,7 @@ function (context, args) {
     let lockToCrack = {}
     let isCracking = true
 
-    // Find and attempt the first lock after the initial scriptor call.
+    // Attempt the first lock after the initial scriptor call.
     let typeOfLockToCrack = getLockType(args.target.call({}), LOCKS.LOCK_TYPES)
     let passwordList = (typeOfLockToCrack.indexOf('c00') > -1) ? LOCKS.COLOURS : LOCKS.EZ_PASS
     let response = crack(typeOfLockToCrack, passwordList, lockToCrack)
@@ -88,21 +92,23 @@ function (context, args) {
         isCracking = false
       }
 
-      // if parameter has been found in response, we need to find out which one
-      // and recall the crack function with the correct passwordList
+      // if parameter has been found in response, now find out which one, strip
+      // any colour tags and recall the crack function with the correct passwordList
       if (response.indexOf('parameter') > -1) {
         typeOfLockToCrack = getLockType(response, LOCKS.PARAMETERS)
 
         // This is a nicer way to doing a switch or lots of if condictions.
-        const cases = {
+        let cases = {
           digit: [...Array(10).keys()],
-          color_digit: [3, 4, 5, 6],
+          color_digit: [lockToCrack.c001 ? lockToCrack.c001.length : 0],
           ez_prime: LOCKS.PRIMES,
-          default: LOCKS.COLOURS
+          c002_complement: [LOCKS.COLOURS[(LOCKS.COLOURS.indexOf(lockToCrack.c002) + 4) % 8]],
+          c003_triad_1: [LOCKS.COLOURS[(LOCKS.COLOURS.indexOf(lockToCrack.c003) + 5) % 8]],
+          c003_triad_2: [LOCKS.COLOURS[(LOCKS.COLOURS.indexOf(lockToCrack.c003) + 3) % 8]]
         }
 
         // set the passwordList based on above object/switch
-        passwordList = cases[typeOfLockToCrack] || cases['default']
+        passwordList = cases[typeOfLockToCrack]
         response = crack(typeOfLockToCrack, passwordList, lockToCrack)
 
       // if it isn't parameter then it must be another lock type.
