@@ -5,7 +5,7 @@ function (context, args) {
 
   const LOCKS = {
     // All the t1 locks
-    LOCK_TYPES: [
+    TYPES: [
       '`NEZ_21`', '`NEZ_35`', '`NEZ_40`', '`Nc001`', '`Nc002`', '`Nc003`'
     ],
     // all the lock paramters
@@ -14,7 +14,7 @@ function (context, args) {
       '`Nc003_triad_1`', '`Nc003_triad_2`'
     ],
     // first lock on all EZs
-    EZ_PASS: [
+    PASS: [
       'unlock', 'open', 'release'
     ],
     // primes for ez_prime
@@ -77,8 +77,8 @@ function (context, args) {
     let isCracking = true
 
     // Attempt the first lock after the initial scripter call.
-    let typeOfLockToCrack = getLockType(args.target.call({}), LOCKS.LOCK_TYPES)
-    let passwordList = (typeOfLockToCrack.indexOf('c00') > -1) ? LOCKS.COLOURS : LOCKS.EZ_PASS
+    let typeOfLockToCrack = getLockType(args.target.call({}), LOCKS.TYPES)
+    let passwordList = (typeOfLockToCrack.indexOf('c00') > -1) ? LOCKS.COLOURS : LOCKS.PASS
     let response = crack(typeOfLockToCrack, passwordList, lockToCrack)
 
     // we want the loop to run at least once and until isCracking is no longer true.
@@ -109,8 +109,8 @@ function (context, args) {
 
       // if it isn't parameter then it must be another lock type.
       } else {
-        typeOfLockToCrack = getLockType(response, LOCKS.LOCK_TYPES)
-        passwordList = (typeOfLockToCrack.indexOf('EZ_') > -1) ? LOCKS.EZ_PASS : LOCKS.COLOURS
+        typeOfLockToCrack = getLockType(response, LOCKS.TYPES)
+        passwordList = (typeOfLockToCrack.indexOf('EZ_') > -1) ? LOCKS.PASS : LOCKS.COLOURS
         response = crack(typeOfLockToCrack, passwordList, lockToCrack)
       }
     } while (isCracking)
