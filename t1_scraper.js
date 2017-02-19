@@ -33,19 +33,34 @@ function (context, args) {
     // get the page names
     let response = stringFormat(args.target.call())
     let sitePages = search(/\s([A-Za-z_]+)\s\|/g, response)
-
     // get the name of the nav
     response = stringFormat(args.target.call({}))
     let siteNav = search(/\s([A-Za-z_]+):/g, response)
-
     // call scripter with nav + site page, i.e. {nav:"info"}
     page[siteNav] = sitePages[0]
 
     // get the wall of text from page name and extract all usernames.
     response = stringFormat(args.target.call(page))
     let usernames = search(/([A-Za-z0-9_-]+)\sof\sproject|-{2}\s([A-Za-z_]+)\s/g, response)
+    // gets names of projects
+    let projects = search(/continues\son\s([A-Za-z0-9_()]+)|on\s([A-Za-z0-9_()]+)\sprogress/g, response)
+    // get staff from page
+    let staff = search(/\s([A-Za-z]+)\s@/g, response)
 
-    return usernames
+    page[siteNav] = sitePages[1]
+    response = stringFormat(args.target.call(page))
+    // strategy thenumberone
+    let password = search(/strategy\s([A-Za-z0-9_-]+)\s/g, response)
+
+    return [
+      ['`Nusernames`', usernames],
+      ['`Nprojects`', projects],
+      ['`Nstaff`', staff],
+      ['`Npassword`', password]]
   }
+  if (!(args && Object.keys(args).length)) {
+    return 'You did not enter any arugements, please use  {`Ntarget`:`V#s.<script name>`} and try again.'
+  }
+
   return logicController()
 }
