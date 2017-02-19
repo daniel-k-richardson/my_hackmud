@@ -120,7 +120,7 @@ function (context, args) {
   }
 
   // if no args have been given, let them know what the script expects.
-  if (Object.keys(args)) {
+  if (!(args && Object.keys(args).length)) {
     return 'error with argument provided, please use `Ntarget`:`V#s.<name of script>`'
   }
 
