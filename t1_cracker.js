@@ -118,5 +118,10 @@ function (context, args) {
     // and we're done!
     return response
   }
+
+  if (Object.keys(args)) {
+    return 'error with argument provided, please use `Ntarget`:`V#s.<name of script>`'
+  }
+
   return logicController()
 }
