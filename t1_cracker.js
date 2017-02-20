@@ -74,7 +74,6 @@ function (context, args) {
   function logicController () {
     // initialization
     let lockToCrack = {}
-    let isCracking = true
 
     // Attempt the first lock after the initial scripter call.
     let typeOfLockToCrack = getLockType(args.target.call({}), LOCKS.TYPES)
@@ -85,7 +84,7 @@ function (context, args) {
     do {
        // terminating case
       if (response.indexOf(LOCKS.CRACKED) > -1) {
-        isCracking = false
+        return response
       }
 
       // if parameter has been found in response, now find out which one, strip
@@ -113,7 +112,7 @@ function (context, args) {
         passwordList = (typeOfLockToCrack.indexOf('EZ_') > -1) ? LOCKS.PASS : LOCKS.COLOURS
         response = crack(typeOfLockToCrack, passwordList, lockToCrack)
       }
-    } while (isCracking)
+    } while (true)
 
     // and we're done!
     return response
