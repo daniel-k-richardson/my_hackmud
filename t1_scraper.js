@@ -40,7 +40,7 @@ function (context, args) {
   // the corp script to scrape
   const corp = (function () {
     let page = {}
-    cost scripter = args.target
+    const scripter = args.target
     // -- these are run automatically when the script runs to get basic info --//
     const directories = (function () {
       return helperAdapter.formatSearch(/\s([A-Za-z_]+)\s\|/g, scripter.call())
@@ -108,4 +108,5 @@ function (context, args) {
     ['`Nstaff`', scraper.getStaff()],
     ['`Npassword`', scraper.getPasswords()]
   ]
+
 }
