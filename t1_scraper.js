@@ -1,66 +1,111 @@
 function (context, args) {
-  // This handles the formating of the string before we go ahead and attempt to
-  // use the regex on.
-  function stringFormat (stringToFormat) {
-    return stringToFormat.toString().replace(/\n/g, ' ')
-  }
 
-  // This searches through a list of words that match our regex
-  function search (regex, response) {
-    let matches = regex.exec(response)
-    let resultsOfMatch = []
+  // helper for formatting and searching response from scripter
+  const helper = (function () {
+    // anything in return is accessable outside.
+    return {
+      // find all regex matches and remove dupes
+      searchText (regex, text) {
+        let resultsOfMatch = []
+        let matches = regex.exec(text)
 
-    // regex only returns a single match unless you keep calling it. the while
-    // loop is to keep calling until the end of the match is found. All these
-    // are put into an array that can be retrieved later.
-    while (matches) {
-      // This is necessary to avoid infinite loops with zero-width matches
-      if (matches.index === regex.lastIndex) {
-        regex.lastIndex++
+        while (matches) {
+          // This is necessary to avoid infinite loops with zero-width matches
+          if (matches.index === regex.lastIndex) {
+            regex.lastIndex++
+          }
+          resultsOfMatch.push(matches[1] || matches[2])
+          matches = regex.exec(text)
+        }
+        return [...new Set(resultsOfMatch)]
+      },
+
+      // used to get rid of all new lines for searching.
+      stringFormater (text) {
+        return text.toString().replace(/\n/g, ' ')
       }
-      // it just so happens a single name can be mentioned twice in both regex
-      // mattern matching, therefore the or works ok (but it isn't perfect).
-      resultsOfMatch.push(matches[1] || matches[2])
-      matches = regex.exec(response)
     }
-    // an array based on regex match patterns
-    return [...new Set(resultsOfMatch)]
-  }
+  }())
 
-  function logicController () {
+  // noticed all my methods were calling heler.stringFormater and searchText
+  // created this adapter to reduce redundancy.
+  const helperAdapter = (function () {
+    return {
+      formatSearch (regex, text) {
+        return helper.searchText(regex, helper.stringFormater(text))
+      }
+    }
+  }())
+
+  // the corp script to scrape
+  const corp = (function () {
     let page = {}
+    let scripter = args.target
+    // -- these are run automatically when the script runs to get basic info --//
+    const directories = (function () {
+      return helperAdapter.formatSearch(/\s([A-Za-z_]+)\s\|/g, scripter.call())
+    }())
 
-    // get the page names
-    let response = stringFormat(args.target.call())
-    let sitePages = search(/\s([A-Za-z_]+)\s\|/g, response)
-    // get the name of the nav
-    response = stringFormat(args.target.call({}))
-    let siteNav = search(/\s([A-Za-z_]+):/g, response)
-    // call scripter with nav + site page, i.e. {nav:"info"}
-    page[siteNav] = sitePages[0]
+    const navigation = (function () {
+      return helperAdapter.formatSearch(/\s([A-Za-z_]+):/g, scripter.call(page))
+    }())
 
-    // get the wall of text from page name and extract all usernames.
-    response = stringFormat(args.target.call(page))
-    let usernames = search(/([A-Za-z0-9_-]+)\sof\sproject|-{2}\s([A-Za-z_]+)\s/g, response)
-    // gets names of projects
-    let projects = search(/continues\son\s([A-Za-z0-9_()]+)|on\s([A-Za-z0-9_()]+)\sprogress/g, response)
-    // get staff from page
-    let staff = search(/\s([A-Za-z]+)\s@/g, response)
+    // callable functions for external use
+    return {
+      getContent (pageNumber) {
+        page[navigation] = directories[pageNumber]
 
-    page[siteNav] = sitePages[1]
-    response = stringFormat(args.target.call(page))
-    // strategy thenumberone
-    let password = search(/strategy\s([A-Za-z0-9_-]+)\s/g, response)
+        return helper.stringFormater(scripter.call(page))
+      }
+    }
+  }())
 
-    return [
-      ['`Nusernames`', usernames],
-      ['`Nprojects`', projects],
-      ['`Nstaff`', staff],
-      ['`Npassword`', password]]
-  }
-  if (!(args && Object.keys(args).length)) {
-    return 'You did not enter any arugements, please use  {`Ntarget`:`V#s.<script name>`} and try again.'
-  }
+  const scraper = (function () {
+    let usernames = []
+    let projects = []
+    let staff = []
+    let password
 
-  return logicController()
+    // don't want to fill all these by default because it might not be necessary
+    // if all we want is a perticalar list of values.
+    return {
+      getUsernames () {
+        const content = corp.getContent(0)
+        usernames = helperAdapter.formatSearch(/([A-Za-z0-9_-]+)\sof\sproject|-{2}\s([A-Za-z_]+)\s/g, content)
+
+        return usernames
+      },
+
+      getProjects () {
+        const content = corp.getContent(0)
+        projects = helperAdapter.formatSearch(/continues\son\s([A-Za-z0-9_()]+)|on\s([A-Za-z0-9_()]+)\sprogress/g, content)
+
+        return projects
+      },
+
+      getStaff () {
+        const content = corp.getContent(0)
+        staff = helperAdapter.formatSearch(/\s([A-Za-z]+)\s@/g, content)
+
+        return staff
+      },
+
+      getPasswords () {
+        do {
+          let content = corp.getContent(1)
+          password = helperAdapter.formatSearch(/strategy\s([A-Za-z0-9_-]+)\s/g, content)
+        } while (!password)
+
+        return password
+      }
+    }
+  }())
+
+  // this just returns everything for now while i'm working on it.
+  return [
+    ['`Nusernames`', scraper.getUsernames()],
+    ['`Nprojects`', scraper.getProjects()],
+    ['`Nstaff`', scraper.getStaff()],
+    ['`Npassword`', scraper.getPasswords()]
+  ]
 }
