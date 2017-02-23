@@ -40,7 +40,7 @@ function (context, args) {
   // the corp script to scrape
   const corp = (function () {
     let page = {}
-    let scripter = args.target
+    cost scripter = args.target
     // -- these are run automatically when the script runs to get basic info --//
     const directories = (function () {
       return helperAdapter.formatSearch(/\s([A-Za-z_]+)\s\|/g, scripter.call())
