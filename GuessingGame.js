@@ -5,7 +5,7 @@ function (context, args) {
 
         This was just a way of messing around with MongoDB and messing with the basics. This is a simple guessing game.
      */
-    
+
     // The game object based on the revealer design pattern
     var guessingGame = (function(){
         var randomNumber    // The Random number the user will attempt to guess
@@ -43,6 +43,10 @@ function (context, args) {
         then cleanUp the database and return the congratulations message.
         */
         function matchGuess(guess) {
+            if(typeof guess === "string") {
+                return "Nice try buddy, no strings allowed!"
+            }
+
             if (guess > randomNumber) {
                 return "Your guess is too high"
             }
