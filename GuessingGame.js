@@ -9,7 +9,7 @@ function (context, args) {
 
         // A helper method for generating a random number
         function _getRandomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
+            return Math.floor(Math.random() * (max - min + 1)) + min
         }
 
         /* Check if the user has already made a guess and set the randomNumber to be the same to stop numbers regenerating
