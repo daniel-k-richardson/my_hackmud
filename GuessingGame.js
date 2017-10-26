@@ -12,9 +12,11 @@ function (context, args) {
             return Math.floor(Math.random() * (max - min + 1)) + min
         }
 
-        /* Check if the user has already made a guess and set the randomNumber to be the same to stop numbers regenerating
-        on each guess attempt. If this guess is the user's first attempt or they have solved it previously, then a new entry is added
-        to the database with their username and the randomly generated number during their first turn.*/
+        /* Create a random number and insert the caller's username and the random number into the database. If the user already exists,
+        they are in the middle of a game, in which case assign the randomNumber the random number assigned to the user in the database.
+        The database is necessary because scripts in the mud are stateless (do not retain values between calls), the database provides 
+        the script with a way to check what the random number was when making the first call to the script. Otherwise, the script creates 
+        a new random number each call. */
         function _setRandomNumber() {
             if (_checkIfUserGussed()) {
                 var results = #db.f({username:context.caller}).first()
@@ -28,7 +30,7 @@ function (context, args) {
             }
         }
 
-        // The cleanUp method is called once a user has solved game
+        // The cleanUp method is called once a user has solved game and removes the user from the database
         function _cleanUp() {
             #db.r({username:context.caller})
         }
