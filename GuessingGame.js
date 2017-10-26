@@ -1,10 +1,7 @@
 function (context, args) {
 
-    /*
-       by HappyCat >'.'<
-
-        This was just a way of messing around with MongoDB and messing with the basics. This is a simple guessing game.
-     */
+    /* by HappyCat >'.'<
+    This was just a way of messing around with MongoDB and messing with the basics. This is a simple guessing game.*/
 
     // The game object based on the revealer design pattern
     var guessingGame = (function(){
@@ -15,11 +12,9 @@ function (context, args) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
-        /*
-        Check if the user has already made a guess and set the randomNumber to be the same to stop numbers regenerating
+        /* Check if the user has already made a guess and set the randomNumber to be the same to stop numbers regenerating
         on each guess attempt. If this guess is the user's first attempt or they have solved it previously, then a new entry is added
-        to the database with their username and the randomly generated number during their first turn.
-        */
+        to the database with their username and the randomly generated number during their first turn.*/
         function _setRandomNumber() {
             if (_checkIfUserGussed()) {
                 var results = #db.f({username:context.caller}).first()
@@ -38,10 +33,13 @@ function (context, args) {
             #db.r({username:context.caller})
         }
 
-        /*
-        Checks the user's guess against the random number and outputs an appropriate message, if the assumption is correct,
-        then cleanUp the database and return the congratulations message.
-        */
+        // Checks if a user has played before or is in the middle of playing.
+        function _checkIfUserGussed() {
+           return (#db.f({username:context.caller}).array().length > 0) ? true : false
+        }
+
+        /* Checks the user's guess against the random number and outputs an appropriate message, if the assumption is correct,
+        then cleanUp the database and return the congratulations message */
         function matchGuess(guess) {
             if(typeof guess === "number") {
                 if (guess > randomNumber) {
@@ -53,17 +51,11 @@ function (context, args) {
                 _cleanUp()
                 return "congratulations, your guess was correct!"
             }
-
             return "Nice try buddy, use a number!"
         }
 
-        // Checks if a user has played before or is in the middle of playing.
-        function _checkIfUserGussed() {
-           return (#db.f({username:context.caller}).array().length > 0) ? true : false
-        }
-                   
         _setRandomNumber()
-            
+
         // only method accessable outside this object.
         return {guess: matchGuess}
     })()
