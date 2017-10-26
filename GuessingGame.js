@@ -1,12 +1,11 @@
-
-/*
-   by HappyCat >'.'<
-
-    This was just a way of messing around with MongoDB and messing with the basics. This is a simple guessing game.
- */
-
 function (context, args) {
 
+    /*
+       by HappyCat >'.'<
+
+        This was just a way of messing around with MongoDB and messing with the basics. This is a simple guessing game.
+     */
+    
     // The game object based on the revealer design pattern
     var guessingGame = (function(){
         var randomNumber    // The Random number the user will attempt to guess
@@ -22,7 +21,7 @@ function (context, args) {
         to the database with their username and the randomly generated number during their first turn.
         */
         function _setRandomNumber() {
-            if (_checkIfUserGussed(context.caller)) {
+            if (_checkIfUserGussed()) {
                 var results = #db.f({username:context.caller}).first()
                 randomNumber = results.randomNumber
             } else {
