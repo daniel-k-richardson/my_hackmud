@@ -43,27 +43,27 @@ function (context, args) {
         then cleanUp the database and return the congratulations message.
         */
         function matchGuess(guess) {
-            if(typeof guess === "string") {
-                return "Nice try buddy, no strings allowed!"
+            if(typeof guess === "number") {
+                if (guess > randomNumber) {
+                    return "Your guess is too high"
+                }
+                if (guess < randomNumber) {
+                    return "Your guess is too low"
+                }
+                _cleanUp()
+                return "congratulations, your guess was correct!"
             }
 
-            if (guess > randomNumber) {
-                return "Your guess is too high"
-            }
-            if (guess < randomNumber) {
-                return "Your guess is too low"
-            }
-            _cleanUp()
-            return "congratulations, your guess was correct!"
+            return "Nice try buddy, use a number!"
         }
 
         // Checks if a user has played before or is in the middle of playing.
         function _checkIfUserGussed() {
            return (#db.f({username:context.caller}).array().length > 0) ? true : false
         }
-
+                   
         _setRandomNumber()
-
+            
         // only method accessable outside this object.
         return {guess: matchGuess}
     })()
