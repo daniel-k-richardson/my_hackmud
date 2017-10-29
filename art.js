@@ -1,7 +1,6 @@
 function (context, args) {
 
     if (!(args && Object.keys(args).length)) {
-
         var message = " Welcome to the "
     }
 
@@ -56,7 +55,6 @@ function (context, args) {
         }
 
         function _remove() {
-
             if(name === undefined) {
                 return "You have not provided the name of the art to remove."
             }
