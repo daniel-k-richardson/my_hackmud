@@ -56,6 +56,11 @@ function (context, args) {
         }
 
         function _remove() {
+
+            if(name === undefined) {
+                return "You have not provided the name of the art to remove."
+            }
+
             var target = #db.f({$and: [{"type": {"$eq": IDENTIFIER}}, {"name":{ "$eq": name}}]}).first()
 
             if (target.uploaded_by === caller) {
