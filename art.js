@@ -1,7 +1,12 @@
 function (context, args) {
-
     if (!(args && Object.keys(args).length)) {
-        var message = " Welcome to the "
+        return "Welcome to the the Art Gallery.\n" +
+            "Use `Nchoose`:\"`Vlisting`\" to see all the art uploaded by users\n" +
+            "Use `Nchoose`:\"`Vview`\", `Nname`:\"`V<name of art>`\" to display the art on screen \n" +
+            "Use `Nchoose`:\"`Vremove`\", `Nname`:\"`V<name of art>`\" to delete art. NOTE: You can only remove art you have uploaded \n" +
+            "Use `Nchoose`:\"`Vupload`\", `Nname`:\"`V<name you want to give your creation>`\", `Nupload`:\"`V<write ascii art here>`\"\n" +
+            "Use `Nchoose`:\"`Vupload`\", `Nname`:\"`V<name you want to give your creation>`\", `Nscript`:`V#s.name.script` `Nargs`:{`Nargs`:`V\"value\"`}\n" +
+            "For example, ascii.art{`Nart`:\"`Vbread`\"} would be `Nscript`:`V#s.ascii.art` `Nargs`:{`Nart`:`V\"bread\"`}\n"
     }
 
     var gallery = (function(contex, args) {
@@ -17,7 +22,6 @@ function (context, args) {
 
         args = JSON.parse(JSON.stringify(args))
         const IDENTIFIER = "Gallery"
-        const BACKTICK_PLACEHOLDER = "#CCODE#"
 
         var name = (typeof args.name === "string") ? args.name : undefined
         var option = (typeof args.choose === "string") ? args.choose : undefined
@@ -25,7 +29,7 @@ function (context, args) {
         var caller = context.caller
 
         function _listing() {
-            var art = #db.f({"type" : {"$eq" : IDENTIFIER}}, {"uploaded_by":1, "name":1, _id:0 }).array()
+            var art = #db.f({"type" : {"$eq" : IDENTIFIER}},  {"uploaded_by":1, "name":1, _id:0 }).array()
             return (art.length > 0) ? art : "The gallery is empty."
         }
 
@@ -34,14 +38,15 @@ function (context, args) {
                 return "No name given"
             }
             var art =  #db.f({$and: [{"type": {"$eq": IDENTIFIER}}, {"name":{ "$eq": name}}]}, {"art": 1, _id: 0}).first()
-            return (art) ? art.art.replace(new RegExp(BACKTICK_PLACEHOLDER, 'g'), "`") : "Sorry, we could not find what you are looking for."
+            return (art) ? art.art.replace(/#CCODE#/g, "`") : "Sorry, we could not find what you are looking for."
         }
 
         function _upload() {
             if (ascii === undefined) {
                 return "No ascii art provided"
             }
-            ascii = ascii.replace(new RegExp('`', 'g'), "BACKTICK_PLACEHOLDER")
+
+            ascii = ascii.replace(/`/g, "#CCODE#")
 
             #db.i(
                 {
@@ -55,10 +60,6 @@ function (context, args) {
         }
 
         function _remove() {
-            if(name === undefined) {
-                return "You have not provided the name of the art to remove."
-            }
-
             var target = #db.f({$and: [{"type": {"$eq": IDENTIFIER}}, {"name":{ "$eq": name}}]}).first()
 
             if (target.uploaded_by === caller) {
@@ -72,13 +73,19 @@ function (context, args) {
             if(option === undefined) {
                 return "no menu option given"
             }
+
             var cases = {
                 "listing": _listing,
                 "view": _view,
                 "upload": _upload,
-                "remove": _remove
+                "remove": _remove,
             }
-            return cases[option]()
+
+            try {
+                return cases[option]()
+            } catch (err) {
+                return "Please `Nchoose`: `Vlisting`, `Vview`, `Vupload`, `Vremove`"
+            }
         }
         return {
             menu: menu,
